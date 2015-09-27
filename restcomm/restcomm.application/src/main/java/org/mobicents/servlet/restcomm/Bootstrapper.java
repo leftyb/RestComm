@@ -13,7 +13,7 @@ import javax.management.MBeanException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.Query;
+//import javax.management.Query;
 import javax.management.ReflectionException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -168,16 +168,17 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     HttpConnectorList getHttpConnectors() throws MalformedObjectNameException,NullPointerException, UnknownHostException, AttributeNotFoundException,
     InstanceNotFoundException, MBeanException, ReflectionException {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        Set<ObjectName> objs = mbs.queryNames(new ObjectName("*:type=Connector,*"),
-                Query.match(Query.attr("protocol"), Query.value("HTTP/1.1")));
-//        String hostname = InetAddress.getLocalHost().getHostName();
-//        InetAddress[] addresses = InetAddress.getAllByName(hostname);
+        //Possible fix only for Jboss.
+        Set<ObjectName> objs = mbs.queryNames(new ObjectName("*:service=ServerConfig"), null );
+        //:service=ServerConfig  Query.match(Query.attr("protocol"), Query.value("HTTP/1.1"))
+        // Set<ObjectName> objs = mbs.queryNames(new ObjectName("*:type=Connector,*"),
+        //Query.match(Query.attr("protocol"), Query.value("HTTP/1.1")));
         ArrayList<HttpConnector> endPoints = new ArrayList<HttpConnector>();
         for (Iterator<ObjectName> i = objs.iterator(); i.hasNext();) {
             ObjectName obj = i.next();
-            String scheme = mbs.getAttribute(obj, "scheme").toString().replaceAll("\"", "");
-            String port = obj.getKeyProperty("port").replaceAll("\"", "");
-            String address = obj.getKeyProperty("address").replaceAll("\"", "");
+            String scheme = "http";
+            String port =  mbs.getAttribute(obj, "WebServicePort").toString();
+            String address = mbs.getAttribute(obj, "WebServiceHost").toString();
             HttpConnector httpConnector = new HttpConnector(scheme, address, Integer.parseInt(port), scheme.equalsIgnoreCase("https"));
             endPoints.add(httpConnector);
 //            for (InetAddress addr : addresses) {
